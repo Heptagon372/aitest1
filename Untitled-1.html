@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 컬렉션</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 개별 영화 카드 컴포넌트
+        function MovieCard({ movie, onClick }) {
+            return (
+                <div 
+                    className="bg-slate-800 rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 border border-slate-700 flex flex-col h-full"
+                    onClick={() => onClick(movie)}
+                >
+                    {/* 포스터 이미지 영역 */}
+                    <div className="h-72 bg-slate-950 relative overflow-hidden group">
+                        <img 
+                            src={`/images/${movie.id}1.jpg`} 
+                            alt={movie.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                            }}
+                        />
+                        {/* 이미지가 없을 때를 대비한 배경 그라데이션 */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent opacity-80 pointer-events-none"></div>
+                    </div>
+                    
+                    {/* 텍스트 정보 영역 */}
+                    <div className="p-6 flex flex-col flex-grow">
+                        <h2 className="text-xl font-bold mb-3 text-white line-clamp-2">{movie.title}</h2>
+                        <p className="text-slate-400 text-sm mb-5 line-clamp-3 leading-relaxed">
+                            {movie.description}
+                        </p>
+                        <div className="mt-auto flex flex-wrap gap-2">
+                            {movie.tags && movie.tags.map((tag, idx) => (
+                                <span key={idx} className="bg-slate-700/50 border border-slate-600 text-slate-300 text-xs px-2.5 py-1 rounded-md">
+                                    #{tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 영화 상세 페이지 컴포넌트
+        function MovieDetail({ movie, onBack }) {
+            // 1~9번까지의 jpg, png, webp 이미지 경로 생성
+            const imagePaths = [];
+            for (let i = 1; i <= 9; i++) {
+                imagePaths.push(`/images/${movie.id}${i}.jpg`);
+                imagePaths.push(`/images/${movie.id}${i}.png`);
+                imagePaths.push(`/images/${movie.id}${i}.webp`);
+            }
+
+            return (
+                <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6">
+                    <button 
+                        onClick={onBack}
+                        className="mb-8 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors flex items-center gap-2 border border-slate-700 shadow-sm"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        뒤로가기
+                    </button>
+
+                    <div className="bg-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl border border-slate-700 mb-12">
+                        <h1 className="text-3xl sm:text-5xl font-extrabold mb-6 text-white tracking-tight">{movie.title}</h1>
+                        <div className="flex flex-wrap gap-3 mb-10">
+                            {movie.tags && movie.tags.map((tag, idx) => (
+                                <span key={idx} className="bg-indigo-900/30 text-indigo-300 text-sm font-medium px-4 py-1.5 rounded-full border border-indigo-800/50">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                        
+                        <div className="bg-slate-900/50 rounded-2xl p-6 border border-slate-700/50">
+                            <h3 className="text-xl font-semibold mb-4 text-slate-200 flex items-center gap-2">
+                                <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                                시놉시스
+                            </h3>
+                            <p className="text-slate-300 text-lg leading-loose whitespace-pre-wrap">
+                                {movie.synopsis}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-2xl font-bold mb-6 px-2 text-white flex items-center gap-3">
+                            <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            이미지 갤러리
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {imagePaths.map((src, idx) => (
+                                <img 
+                                    key={idx}
+                                    src={src} 
+                                    alt={`${movie.title} 관련 이미지`}
+                                    className="w-full h-64 object-cover rounded-2xl shadow-lg border border-slate-700 hover:opacity-80 transition-opacity"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none'; // 존재하지 않는 이미지 숨김 처리
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 메인 App 컴포넌트
+        function App() {
+            const [movies, setMovies] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [selectedMovie, setSelectedMovie] = useState(null);
+
+            useEffect(() => {
+                // data.json 파일 비동기 로딩
+                fetch('data.json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('데이터를 불러올 수 없습니다.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        setMovies(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // data.json이 없을 경우 화면을 확인하기 위한 샘플 데이터 
+                        setMovies([{
+                            "id": "salmokji",
+                            "title": "살목지, Salmokji : Whispering Water (2025)",
+                            "synopsis": "기이한 소문이 끊이지 않는 저수지 '살목지'. 그곳에 얽힌 오랜 저주와 비밀을 파헤치기 위해 찾아온 사람들은 점차 알 수 없는 환청과 기현상에 시달리기 시작하는데...",
+                            "description": "살목지의 미스터리한 저주와 비밀을 담은 스릴러",
+                            "tags": ["미스터리", "스릴러", "공포", "한국영화"]
+                        }]);
+                        setLoading(false);
+                    });
+            }, []);
+
+            if (loading) {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen">
+                        <div className="w-16 h-16 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                        <div className="text-xl font-semibold text-slate-400">로딩 중...</div>
+                    </div>
+                );
+            }
+
+            return (
+                <main className="container mx-auto px-4 py-12">
+                    {selectedMovie ? (
+                        <MovieDetail 
+                            movie={selectedMovie} 
+                            onBack={() => setSelectedMovie(null)} 
+                        />
+                    ) : (
+                        <div>
+                            <header className="mb-16 text-center">
+                                <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-emerald-400">
+                                    시네마 보드
+                                </h1>
+                                <p className="text-slate-400 text-lg">당신을 위한 특별한 영화 컬렉션을 만나보세요.</p>
+                            </header>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                                {movies.map(movie => (
+                                    <MovieCard 
+                                        key={movie.id} 
+                                        movie={movie} 
+                                        onClick={setSelectedMovie} 
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </main>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
